@@ -15,13 +15,19 @@ serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get("WORLD_LABS_API_KEY");
-    if (!apiKey) {
-      throw new Error("WORLD_LABS_API_KEY is not configured");
-    }
+    if (!apiKey) throw new Error("WORLD_LABS_API_KEY is not configured");
 
-    const { action, environment_summary, operation_id } = await req.json();
+    const wlHeaders = {
+      "WLT-Api-Key": apiKey,
+      "Content-Type": "application/json",
+    };
 
+    const body = await req.json();
+    const { action } = body;
+
+    // --- ACTION: generate (text-only, Scenario A) ---
     if (action === "generate") {
+      const { environment_summary } = body;
       if (!environment_summary) {
         return new Response(
           JSON.stringify({ error: "environment_summary is required" }),
@@ -31,12 +37,9 @@ serve(async (req) => {
 
       const response = await fetch(`${WORLD_LABS_BASE}/worlds:generate`, {
         method: "POST",
-        headers: {
-          "WLT-Api-Key": apiKey,
-          "Content-Type": "application/json",
-        },
+        headers: wlHeaders,
         body: JSON.stringify({
-          display_name: "Mission Brief World",
+          display_name: "Mission Brief",
           model: "Marble 0.1-mini",
           world_prompt: {
             type: "text",
@@ -49,7 +52,7 @@ serve(async (req) => {
         const errorText = await response.text();
         console.error("World Labs generate error:", response.status, errorText);
         return new Response(
-          JSON.stringify({ error: `World Labs API error: ${response.status}` }),
+          JSON.stringify({ error: `World Labs API error: ${response.status}`, details: errorText }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -60,7 +63,122 @@ serve(async (req) => {
       });
     }
 
+    // --- ACTION: generate_with_image (Scenario B — 3 steps) ---
+    if (action === "generate_with_image") {
+      const { environment_summary, image_base64, media_type } = body;
+      if (!image_base64) {
+        return new Response(
+          JSON.stringify({ error: "image_base64 is required for generate_with_image" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Determine extension from media_type
+      const extensionMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
+      const ext = extensionMap[media_type || "image/jpeg"] || "jpg";
+      const contentType = media_type || "image/jpeg";
+
+      // Step B1: Prepare upload
+      const prepareRes = await fetch(`${WORLD_LABS_BASE}/media-assets:prepare_upload`, {
+        method: "POST",
+        headers: wlHeaders,
+        body: JSON.stringify({
+          file_name: `recon.${ext}`,
+          kind: "image",
+          extension: ext,
+        }),
+      });
+
+      if (!prepareRes.ok) {
+        const errorText = await prepareRes.text();
+        console.error("World Labs prepare_upload error:", prepareRes.status, errorText);
+        return new Response(
+          JSON.stringify({ error: `Prepare upload failed: ${prepareRes.status}`, details: errorText }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const prepareData = await prepareRes.json();
+      const mediaAssetId = prepareData?.media_asset?.id;
+      const uploadUrl = prepareData?.upload_info?.upload_url;
+
+      if (!mediaAssetId || !uploadUrl) {
+        console.error("Unexpected prepare_upload response:", JSON.stringify(prepareData));
+        return new Response(
+          JSON.stringify({ error: "Missing media_asset.id or upload_info.upload_url from prepare_upload" }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Step B2: Upload the image binary
+      // Decode base64 to binary
+      const binaryStr = atob(image_base64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": contentType,
+          "x-goog-content-length-range": "0,1048576000",
+        },
+        body: bytes,
+      });
+
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text();
+        console.error("Image upload error:", uploadRes.status, errorText);
+        return new Response(
+          JSON.stringify({ error: `Image upload failed: ${uploadRes.status}`, details: errorText }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Step B3: Generate world with image
+      const generateBody: Record<string, unknown> = {
+        display_name: "Mission Brief",
+        model: "Marble 0.1-mini",
+        world_prompt: {
+          type: "image",
+          image_prompt: {
+            source: "media_asset",
+            media_asset_id: mediaAssetId,
+          },
+          ...(environment_summary ? { text_prompt: environment_summary } : {}),
+        },
+      };
+
+      const genRes = await fetch(`${WORLD_LABS_BASE}/worlds:generate`, {
+        method: "POST",
+        headers: wlHeaders,
+        body: JSON.stringify(generateBody),
+      });
+
+      if (!genRes.ok) {
+        const errorText = await genRes.text();
+        console.error("World Labs generate (image) error:", genRes.status, errorText);
+        return new Response(
+          JSON.stringify({ error: `World Labs generate error: ${genRes.status}`, details: errorText }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const genData = await genRes.json();
+      return new Response(JSON.stringify(genData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- ACTION: poll ---
     if (action === "poll") {
+      const { operation_id } = body;
       if (!operation_id) {
         return new Response(
           JSON.stringify({ error: "operation_id is required" }),
@@ -76,7 +194,7 @@ serve(async (req) => {
         const errorText = await response.text();
         console.error("World Labs poll error:", response.status, errorText);
         return new Response(
-          JSON.stringify({ error: `World Labs poll error: ${response.status}` }),
+          JSON.stringify({ error: `World Labs poll error: ${response.status}`, details: errorText }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -88,7 +206,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: "Invalid action. Use 'generate' or 'poll'." }),
+      JSON.stringify({ error: "Invalid action. Use 'generate', 'generate_with_image', or 'poll'." }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

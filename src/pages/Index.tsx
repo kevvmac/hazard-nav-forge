@@ -12,16 +12,30 @@ const Index = () => {
   const [missionName, setMissionName] = useState("UNNAMED-OP");
   const [worldUrl, setWorldUrl] = useState<string | null>(null);
   const [isGeneratingWorld, setIsGeneratingWorld] = useState(false);
+  const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
+  const [uploadedImageMediaType, setUploadedImageMediaType] = useState<string>("image/jpeg");
   const { toast } = useToast();
 
-  const generateWorld = useCallback(async (environmentSummary: string) => {
+  const generateWorld = useCallback(async (environmentSummary: string, imageBase64?: string | null, mediaType?: string) => {
     setIsGeneratingWorld(true);
     setWorldUrl(null);
 
     try {
-      // Start generation
+      // Determine action based on whether we have an image
+      const body = imageBase64
+        ? {
+            action: "generate_with_image",
+            environment_summary: environmentSummary,
+            image_base64: imageBase64,
+            media_type: mediaType || "image/jpeg",
+          }
+        : {
+            action: "generate",
+            environment_summary: environmentSummary,
+          };
+
       const { data: genData, error: genError } = await supabase.functions.invoke("generate-world", {
-        body: { action: "generate", environment_summary: environmentSummary },
+        body,
       });
 
       if (genError) throw genError;
@@ -59,13 +73,19 @@ const Index = () => {
     }
   }, [toast]);
 
-  const handleAnalysisComplete = (result: AnalysisResult, name: string) => {
+  const handleAnalysisComplete = (result: AnalysisResult, name: string, imageBase64?: string | null, mediaType?: string) => {
     setAnalysis(result);
     setMissionName(name);
+    if (imageBase64) {
+      setUploadedImageBase64(imageBase64);
+      setUploadedImageMediaType(mediaType || "image/jpeg");
+    } else {
+      setUploadedImageBase64(null);
+    }
 
     // Kick off world generation with the environment summary
     if (result.environment_summary) {
-      generateWorld(result.environment_summary);
+      generateWorld(result.environment_summary, imageBase64, mediaType);
     }
   };
 
