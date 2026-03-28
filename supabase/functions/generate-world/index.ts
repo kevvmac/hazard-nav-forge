@@ -127,8 +127,8 @@ serve(async (req) => {
       const uploadRes = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
-          "Content-Type": contentType,
-          "x-goog-content-length-range": "0,1048576000",
+          "x-goog-content-length-range": "0,104857600",
+          "host": "storage.googleapis.com",
         },
         body: bytes,
       });
