@@ -128,7 +128,7 @@ const Index = () => {
       <TopBar />
       <div className="flex-1 flex overflow-hidden">
         <InputPanel onAnalysisComplete={handleAnalysisComplete} />
-        <WorldViewer worldUrl={worldUrl} isGenerating={isGeneratingWorld} />
+        <WorldViewer worldUrl={worldUrl} thumbnailUrl={thumbnailUrl} isGenerating={isGeneratingWorld} />
         <RightSidebar analysis={analysis} missionName={missionName} />
       </div>
     </div>
