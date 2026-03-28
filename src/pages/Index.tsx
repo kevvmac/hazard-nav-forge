@@ -7,6 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AnalysisResult } from "@/types/analysis";
 import { useToast } from "@/hooks/use-toast";
 
+const extractWorldUrl = (payload: any): string | null => {
+  if (typeof payload?.world_marble_url === "string" && payload.world_marble_url.length > 0) {
+    return payload.world_marble_url;
+  }
+
+  if (typeof payload?.response?.world_marble_url === "string" && payload.response.world_marble_url.length > 0) {
+    return payload.response.world_marble_url;
+  }
+
+  return null;
+};
+
 const Index = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [missionName, setMissionName] = useState("UNNAMED-OP");
@@ -43,6 +55,7 @@ const Index = () => {
 
       const operationId = genData?.operation_id;
       if (!operationId) throw new Error("No operation_id returned from World Labs");
+      console.log("World generation operation created:", operationId, genData);
 
       // Poll until done
       const poll = async (): Promise<string> => {
@@ -52,9 +65,17 @@ const Index = () => {
 
         if (pollError) throw pollError;
         if (pollData?.error) throw new Error(pollData.error);
+        console.log("World generation poll response:", pollData);
 
         if (pollData?.done) {
-          return pollData.world_marble_url;
+          const resolvedWorldUrl = extractWorldUrl(pollData);
+
+          if (!resolvedWorldUrl) {
+            throw new Error("World generation completed but no world URL was returned");
+          }
+
+          console.log("Setting world iframe URL:", resolvedWorldUrl);
+          return resolvedWorldUrl;
         }
 
         // Wait 5 seconds then poll again
