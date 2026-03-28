@@ -58,6 +58,8 @@ serve(async (req) => {
       }
 
       const data = await response.json();
+      console.log("World Labs generate response:", JSON.stringify(data));
+      console.log("World Labs operation created:", data?.operation_id);
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -172,6 +174,8 @@ serve(async (req) => {
       }
 
       const genData = await genRes.json();
+      console.log("World Labs image generate response:", JSON.stringify(genData));
+      console.log("World Labs operation created:", genData?.operation_id);
       return new Response(JSON.stringify(genData), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -201,7 +205,17 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      return new Response(JSON.stringify(data), {
+      console.log("World Labs poll response:", JSON.stringify(data));
+
+      const worldMarbleUrl = data?.response?.world_marble_url ?? null;
+      if (data?.done) {
+        console.log("World Labs completed world URL:", worldMarbleUrl);
+      }
+
+      return new Response(JSON.stringify({
+        ...data,
+        world_marble_url: worldMarbleUrl,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
