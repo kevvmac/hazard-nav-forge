@@ -7,7 +7,7 @@ const WorldViewer = () => {
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-primary" />
-          <span className="font-mono text-xs uppercase tracking-widest text-primary font-semibold">
+          <span className="font-mono text-xs uppercase tracking-widest text-foreground font-semibold">
             3D Environment
           </span>
         </div>
