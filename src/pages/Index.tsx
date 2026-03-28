@@ -31,6 +31,7 @@ const Index = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [missionName, setMissionName] = useState("UNNAMED-OP");
   const [worldUrl, setWorldUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isGeneratingWorld, setIsGeneratingWorld] = useState(false);
   const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
   const [uploadedImageMediaType, setUploadedImageMediaType] = useState<string>("image/jpeg");
