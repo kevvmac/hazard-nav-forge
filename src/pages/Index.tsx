@@ -99,6 +99,7 @@ const Index = () => {
       };
 
       const result = await poll();
+      console.log("WorldViewer props — worldUrl:", result.worldUrl, "thumbnailUrl:", result.thumbnailUrl);
       setWorldUrl(result.worldUrl);
       setThumbnailUrl(result.thumbnailUrl);
       toast({ title: "3D World Ready", description: "Environment has been generated successfully." });
