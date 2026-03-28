@@ -11,11 +11,19 @@ const extractWorldUrl = (payload: any): string | null => {
   if (typeof payload?.world_marble_url === "string" && payload.world_marble_url.length > 0) {
     return payload.world_marble_url;
   }
-
   if (typeof payload?.response?.world_marble_url === "string" && payload.response.world_marble_url.length > 0) {
     return payload.response.world_marble_url;
   }
+  return null;
+};
 
+const extractThumbnailUrl = (payload: any): string | null => {
+  if (typeof payload?.thumbnail_url === "string" && payload.thumbnail_url.length > 0) {
+    return payload.thumbnail_url;
+  }
+  if (typeof payload?.response?.assets?.thumbnail_url === "string" && payload.response.assets.thumbnail_url.length > 0) {
+    return payload.response.assets.thumbnail_url;
+  }
   return null;
 };
 
