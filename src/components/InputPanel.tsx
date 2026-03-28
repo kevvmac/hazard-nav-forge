@@ -5,7 +5,7 @@ import type { AnalysisResult } from "@/types/analysis";
 import { useToast } from "@/hooks/use-toast";
 
 interface InputPanelProps {
-  onAnalysisComplete: (result: AnalysisResult, missionName: string) => void;
+  onAnalysisComplete: (result: AnalysisResult, missionName: string, imageBase64?: string | null, mediaType?: string) => void;
 }
 
 const InputPanel = ({ onAnalysisComplete }: InputPanelProps) => {
