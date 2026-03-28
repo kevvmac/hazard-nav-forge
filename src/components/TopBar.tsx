@@ -5,7 +5,7 @@ const TopBar = () => {
     <div className="h-11 border-b border-border bg-ops-panel flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
         <Shield className="h-5 w-5 text-primary" />
-        <span className="font-mono text-sm uppercase tracking-widest text-primary font-bold">
+        <span className="font-mono text-sm uppercase tracking-widest text-foreground font-bold">
           MissionBrief
         </span>
         <div className="h-4 w-px bg-border mx-1" />
