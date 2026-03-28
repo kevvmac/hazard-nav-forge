@@ -208,7 +208,9 @@ serve(async (req) => {
       console.log("World Labs poll response:", JSON.stringify(data));
 
       const worldMarbleUrl = data?.response?.world_marble_url ?? null;
-      const thumbnailUrl = data?.response?.assets?.thumbnail_url ?? null;
+      const thumbnailUrl = data?.response?.assets?.thumbnail_url
+        ?? data?.response?.assets?.imagery?.pano_url
+        ?? null;
       if (data?.done) {
         console.log("World Labs completed world URL:", worldMarbleUrl);
         console.log("World Labs thumbnail URL:", thumbnailUrl);

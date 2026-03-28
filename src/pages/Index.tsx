@@ -24,6 +24,9 @@ const extractThumbnailUrl = (payload: any): string | null => {
   if (typeof payload?.response?.assets?.thumbnail_url === "string" && payload.response.assets.thumbnail_url.length > 0) {
     return payload.response.assets.thumbnail_url;
   }
+  if (typeof payload?.response?.assets?.imagery?.pano_url === "string" && payload.response.assets.imagery.pano_url.length > 0) {
+    return payload.response.assets.imagery.pano_url;
+  }
   return null;
 };
 
