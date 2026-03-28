@@ -1,57 +1,41 @@
-import { AlertTriangle, Flame, Zap, Skull } from "lucide-react";
-
-interface Hazard {
-  id: string;
-  name: string;
-  severity: "critical" | "high" | "moderate" | "low";
-  description: string;
-  icon: React.ElementType;
-}
-
-const mockHazards: Hazard[] = [
-  {
-    id: "1",
-    name: "Structural Collapse Risk",
-    severity: "critical",
-    description: "East wing supports compromised. Load-bearing walls show fracture patterns consistent with explosive damage.",
-    icon: AlertTriangle,
-  },
-  {
-    id: "2",
-    name: "Chemical Contamination",
-    severity: "high",
-    description: "Residual chemical agents detected in lower levels. CBRN protocols required for entry.",
-    icon: Skull,
-  },
-  {
-    id: "3",
-    name: "Electrical Hazard",
-    severity: "moderate",
-    description: "Exposed wiring in corridors B3-B7. Power grid status unknown. Assume live.",
-    icon: Zap,
-  },
-  {
-    id: "4",
-    name: "Fire Risk",
-    severity: "high",
-    description: "Fuel storage on sublevel 2. Ventilation system may accelerate combustion.",
-    icon: Flame,
-  },
-];
+import { AlertTriangle, Flame, Zap, Skull, RadioTower } from "lucide-react";
+import type { AnalysisResult, HazardData } from "@/types/analysis";
 
 const severityConfig = {
   critical: { color: "text-ops-red", bg: "bg-ops-red/10", border: "border-ops-red/30", label: "CRIT" },
   high: { color: "text-ops-orange", bg: "bg-ops-orange/10", border: "border-ops-orange/30", label: "HIGH" },
-  moderate: { color: "text-ops-amber", bg: "bg-ops-amber/10", border: "border-ops-amber/30", label: "MOD" },
-  low: { color: "text-ops-green", bg: "bg-ops-green/10", border: "border-ops-green/30", label: "LOW" },
+  medium: { color: "text-ops-amber", bg: "bg-ops-amber/10", border: "border-ops-amber/30", label: "MED" },
 };
 
-const HazardsTab = () => {
+const severityIcons: Record<string, React.ElementType> = {
+  critical: Skull,
+  high: Flame,
+  medium: AlertTriangle,
+};
+
+interface HazardsTabProps {
+  analysis: AnalysisResult | null;
+}
+
+const HazardsTab = ({ analysis }: HazardsTabProps) => {
+  const hazards = analysis?.hazards || [];
+
+  if (!analysis) {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center gap-3 h-full text-center">
+        <RadioTower className="h-8 w-8 text-muted-foreground" />
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          Awaiting analysis — submit a mission input to scan for threats
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between mb-1">
         <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {mockHazards.length} threats identified
+          {hazards.length} threats identified
         </span>
         <div className="flex items-center gap-1.5">
           <div className="h-2 w-2 rounded-full bg-ops-red animate-pulse-amber" />
@@ -59,12 +43,12 @@ const HazardsTab = () => {
         </div>
       </div>
 
-      {mockHazards.map((hazard) => {
-        const config = severityConfig[hazard.severity];
-        const Icon = hazard.icon;
+      {hazards.map((hazard, i) => {
+        const config = severityConfig[hazard.severity] || severityConfig.medium;
+        const Icon = severityIcons[hazard.severity] || AlertTriangle;
         return (
           <div
-            key={hazard.id}
+            key={i}
             className={`border ${config.border} ${config.bg} p-3 flex flex-col gap-2`}
           >
             <div className="flex items-start justify-between gap-2">
@@ -76,6 +60,11 @@ const HazardsTab = () => {
                 {config.label}
               </span>
             </div>
+            {hazard.location && (
+              <p className="text-[10px] font-mono text-muted-foreground pl-6 uppercase tracking-wider">
+                Location: {hazard.location}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground leading-relaxed pl-6">
               {hazard.description}
             </p>
