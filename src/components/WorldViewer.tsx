@@ -1,11 +1,15 @@
-import { Loader2, Globe } from "lucide-react";
+import { Loader2, Globe, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface WorldViewerProps {
   worldUrl: string | null;
+  thumbnailUrl: string | null;
   isGenerating: boolean;
 }
 
-const WorldViewer = ({ worldUrl, isGenerating }: WorldViewerProps) => {
+const WorldViewer = ({ worldUrl, thumbnailUrl, isGenerating }: WorldViewerProps) => {
+  const hasWorld = !!worldUrl;
+
   return (
     <div className="flex-1 flex flex-col h-full bg-background relative overflow-hidden">
       {/* Header bar */}
@@ -19,7 +23,7 @@ const WorldViewer = ({ worldUrl, isGenerating }: WorldViewerProps) => {
         <div className="flex items-center gap-2">
           <div
             className={`h-2 w-2 rounded-full ${
-              worldUrl
+              hasWorld
                 ? "bg-ops-green"
                 : isGenerating
                 ? "bg-ops-amber animate-pulse-amber"
@@ -27,20 +31,47 @@ const WorldViewer = ({ worldUrl, isGenerating }: WorldViewerProps) => {
             }`}
           />
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            {worldUrl ? "World Loaded" : isGenerating ? "Generating..." : "Awaiting Data"}
+            {hasWorld ? "World Loaded" : isGenerating ? "Generating..." : "Awaiting Data"}
           </span>
         </div>
       </div>
 
       {/* Viewport */}
       <div className="flex-1 relative flex items-center justify-center">
-        {worldUrl ? (
-          <iframe
-            src={worldUrl}
-            className="absolute inset-0 w-full h-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-            allowFullScreen
-          />
+        {hasWorld ? (
+          <div className="absolute inset-0">
+            {/* Thumbnail background */}
+            {thumbnailUrl ? (
+              <img
+                src={thumbnailUrl}
+                alt="3D Environment Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted" />
+            )}
+
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px] flex flex-col items-center justify-center gap-6">
+              <div className="flex flex-col items-center gap-2">
+                <Globe className="h-10 w-10 text-primary" />
+                <span className="font-mono text-xs uppercase tracking-widest text-foreground font-semibold">
+                  Environment Ready
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  Interactive 3D world generated successfully
+                </span>
+              </div>
+              <Button
+                size="lg"
+                className="font-mono uppercase tracking-widest gap-2"
+                onClick={() => window.open(worldUrl, "_blank", "noopener,noreferrer")}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Explore 3D Environment
+              </Button>
+            </div>
+          </div>
         ) : (
           <>
             {/* Grid background */}

@@ -11,11 +11,19 @@ const extractWorldUrl = (payload: any): string | null => {
   if (typeof payload?.world_marble_url === "string" && payload.world_marble_url.length > 0) {
     return payload.world_marble_url;
   }
-
   if (typeof payload?.response?.world_marble_url === "string" && payload.response.world_marble_url.length > 0) {
     return payload.response.world_marble_url;
   }
+  return null;
+};
 
+const extractThumbnailUrl = (payload: any): string | null => {
+  if (typeof payload?.thumbnail_url === "string" && payload.thumbnail_url.length > 0) {
+    return payload.thumbnail_url;
+  }
+  if (typeof payload?.response?.assets?.thumbnail_url === "string" && payload.response.assets.thumbnail_url.length > 0) {
+    return payload.response.assets.thumbnail_url;
+  }
   return null;
 };
 
@@ -23,6 +31,7 @@ const Index = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [missionName, setMissionName] = useState("UNNAMED-OP");
   const [worldUrl, setWorldUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isGeneratingWorld, setIsGeneratingWorld] = useState(false);
   const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
   const [uploadedImageMediaType, setUploadedImageMediaType] = useState<string>("image/jpeg");
@@ -31,6 +40,7 @@ const Index = () => {
   const generateWorld = useCallback(async (environmentSummary: string, imageBase64?: string | null, mediaType?: string) => {
     setIsGeneratingWorld(true);
     setWorldUrl(null);
+    setThumbnailUrl(null);
 
     try {
       // Determine action based on whether we have an image
@@ -58,7 +68,7 @@ const Index = () => {
       console.log("World generation operation created:", operationId, genData);
 
       // Poll until done
-      const poll = async (): Promise<string> => {
+      const poll = async (): Promise<{ worldUrl: string; thumbnailUrl: string | null }> => {
         const { data: pollData, error: pollError } = await supabase.functions.invoke("generate-world", {
           body: { action: "poll", operation_id: operationId },
         });
@@ -69,13 +79,15 @@ const Index = () => {
 
         if (pollData?.done) {
           const resolvedWorldUrl = extractWorldUrl(pollData);
+          const resolvedThumbnailUrl = extractThumbnailUrl(pollData);
 
           if (!resolvedWorldUrl) {
             throw new Error("World generation completed but no world URL was returned");
           }
 
-          console.log("Setting world iframe URL:", resolvedWorldUrl);
-          return resolvedWorldUrl;
+          console.log("Setting world URL:", resolvedWorldUrl);
+          console.log("Setting thumbnail URL:", resolvedThumbnailUrl);
+          return { worldUrl: resolvedWorldUrl, thumbnailUrl: resolvedThumbnailUrl };
         }
 
         // Wait 5 seconds then poll again
@@ -83,8 +95,9 @@ const Index = () => {
         return poll();
       };
 
-      const url = await poll();
-      setWorldUrl(url);
+      const result = await poll();
+      setWorldUrl(result.worldUrl);
+      setThumbnailUrl(result.thumbnailUrl);
       toast({ title: "3D World Ready", description: "Environment has been generated successfully." });
     } catch (err: any) {
       console.error("World generation failed:", err);
@@ -115,7 +128,7 @@ const Index = () => {
       <TopBar />
       <div className="flex-1 flex overflow-hidden">
         <InputPanel onAnalysisComplete={handleAnalysisComplete} />
-        <WorldViewer worldUrl={worldUrl} isGenerating={isGeneratingWorld} />
+        <WorldViewer worldUrl={worldUrl} thumbnailUrl={thumbnailUrl} isGenerating={isGeneratingWorld} />
         <RightSidebar analysis={analysis} missionName={missionName} />
       </div>
     </div>
