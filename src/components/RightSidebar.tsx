@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { AnalysisResult } from "@/types/analysis";
 import HazardsTab from "./tabs/HazardsTab";
 import BriefTab from "./tabs/BriefTab";
 import ChatTab from "./tabs/ChatTab";
@@ -11,12 +12,16 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-const RightSidebar = () => {
+interface RightSidebarProps {
+  analysis: AnalysisResult | null;
+  missionName: string;
+}
+
+const RightSidebar = ({ analysis, missionName }: RightSidebarProps) => {
   const [activeTab, setActiveTab] = useState<TabId>("hazards");
 
   return (
     <div className="w-96 min-w-[384px] border-l border-border bg-ops-panel flex flex-col h-full">
-      {/* Tab bar */}
       <div className="flex border-b border-border">
         {tabs.map((tab) => (
           <button
@@ -36,10 +41,9 @@ const RightSidebar = () => {
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === "hazards" && <HazardsTab />}
-        {activeTab === "brief" && <BriefTab />}
+        {activeTab === "hazards" && <HazardsTab analysis={analysis} />}
+        {activeTab === "brief" && <BriefTab analysis={analysis} missionName={missionName} />}
         {activeTab === "chat" && <ChatTab />}
       </div>
     </div>
