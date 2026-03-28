@@ -79,13 +79,15 @@ const Index = () => {
 
         if (pollData?.done) {
           const resolvedWorldUrl = extractWorldUrl(pollData);
+          const resolvedThumbnailUrl = extractThumbnailUrl(pollData);
 
           if (!resolvedWorldUrl) {
             throw new Error("World generation completed but no world URL was returned");
           }
 
-          console.log("Setting world iframe URL:", resolvedWorldUrl);
-          return resolvedWorldUrl;
+          console.log("Setting world URL:", resolvedWorldUrl);
+          console.log("Setting thumbnail URL:", resolvedThumbnailUrl);
+          return { worldUrl: resolvedWorldUrl, thumbnailUrl: resolvedThumbnailUrl };
         }
 
         // Wait 5 seconds then poll again
@@ -93,8 +95,9 @@ const Index = () => {
         return poll();
       };
 
-      const url = await poll();
-      setWorldUrl(url);
+      const result = await poll();
+      setWorldUrl(result.worldUrl);
+      setThumbnailUrl(result.thumbnailUrl);
       toast({ title: "3D World Ready", description: "Environment has been generated successfully." });
     } catch (err: any) {
       console.error("World generation failed:", err);
