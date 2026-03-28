@@ -73,13 +73,19 @@ const Index = () => {
     }
   }, [toast]);
 
-  const handleAnalysisComplete = (result: AnalysisResult, name: string) => {
+  const handleAnalysisComplete = (result: AnalysisResult, name: string, imageBase64?: string | null, mediaType?: string) => {
     setAnalysis(result);
     setMissionName(name);
+    if (imageBase64) {
+      setUploadedImageBase64(imageBase64);
+      setUploadedImageMediaType(mediaType || "image/jpeg");
+    } else {
+      setUploadedImageBase64(null);
+    }
 
     // Kick off world generation with the environment summary
     if (result.environment_summary) {
-      generateWorld(result.environment_summary);
+      generateWorld(result.environment_summary, imageBase64, mediaType);
     }
   };
 
