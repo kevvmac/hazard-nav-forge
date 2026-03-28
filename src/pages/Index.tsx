@@ -40,6 +40,7 @@ const Index = () => {
   const generateWorld = useCallback(async (environmentSummary: string, imageBase64?: string | null, mediaType?: string) => {
     setIsGeneratingWorld(true);
     setWorldUrl(null);
+    setThumbnailUrl(null);
 
     try {
       // Determine action based on whether we have an image
