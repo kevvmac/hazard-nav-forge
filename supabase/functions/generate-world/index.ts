@@ -104,13 +104,14 @@ serve(async (req) => {
       }
 
       const prepareData = await prepareRes.json();
-      const mediaAssetId = prepareData?.media_asset?.id;
+      console.log("prepare_upload response:", JSON.stringify(prepareData));
+      const mediaAssetId = prepareData?.media_asset?.media_asset_id;
       const uploadUrl = prepareData?.upload_info?.upload_url;
 
       if (!mediaAssetId || !uploadUrl) {
         console.error("Unexpected prepare_upload response:", JSON.stringify(prepareData));
         return new Response(
-          JSON.stringify({ error: "Missing media_asset.id or upload_info.upload_url from prepare_upload" }),
+          JSON.stringify({ error: "Missing media_asset.media_asset_id or upload_info.upload_url from prepare_upload" }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
