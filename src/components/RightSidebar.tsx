@@ -44,7 +44,7 @@ const RightSidebar = ({ analysis, missionName }: RightSidebarProps) => {
       <div className="flex-1 overflow-y-auto">
         {activeTab === "hazards" && <HazardsTab analysis={analysis} />}
         {activeTab === "brief" && <BriefTab analysis={analysis} missionName={missionName} />}
-        {activeTab === "chat" && <ChatTab />}
+        {activeTab === "chat" && <ChatTab analysis={analysis} />}
       </div>
     </div>
   );
