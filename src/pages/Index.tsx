@@ -68,7 +68,7 @@ const Index = () => {
       console.log("World generation operation created:", operationId, genData);
 
       // Poll until done
-      const poll = async (): Promise<string> => {
+      const poll = async (): Promise<{ worldUrl: string; thumbnailUrl: string | null }> => {
         const { data: pollData, error: pollError } = await supabase.functions.invoke("generate-world", {
           body: { action: "poll", operation_id: operationId },
         });
