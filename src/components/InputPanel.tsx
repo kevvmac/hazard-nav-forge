@@ -55,7 +55,7 @@ const InputPanel = ({ onAnalysisComplete }: InputPanelProps) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      onAnalysisComplete(data as AnalysisResult, missionName || "UNNAMED-OP");
+      onAnalysisComplete(data as AnalysisResult, missionName || "UNNAMED-OP", fileBase64, fileMediaType);
       toast({ title: "Analysis complete", description: `${data.hazards?.length || 0} hazards identified.` });
     } catch (err: any) {
       console.error("Analysis failed:", err);
