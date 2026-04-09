@@ -54,7 +54,6 @@ bashbun run dev
 Built By:
 Kevin — Data Analytics & GTM Strategy consultant transitioning into solutions engineering and AI deployment roles.
 🔗 LinkedIn: https://www.linkedin.com/in/kevin-macias-2aa5031a1/ 
-🔗 Portfolio: 
 
 Built in one day at the World Labs Hackathon, NYC — April 2026
 
